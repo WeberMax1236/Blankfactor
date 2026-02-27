@@ -1,23 +1,32 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { Prisma } from '@prisma/client';
-
+import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles/roles.guard';
+import { Roles } from '../common/decorators/roles/roles.decorator';
+import { Role } from '@prisma/client';
 @Controller('users')
 export class UsersController {
-  constructor(private usersService: UsersService) {}
-
-  @Post()
-  create(@Body() data: Prisma.UserCreateInput) {
-    return this.usersService.create(data);
+  //////////////////////////////////////////////////////////////////
+  /* All users can access these routes*/
+  ///////////////////////////////////////////////////////////////////
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Req() req) {
+    return {
+      message: 'Protected profile data',
+      user: req.user,
+    };
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  //////////////////////////////////////////////////////////////////
+  /* Only ADMIN users can access these routes*/
+  ///////////////////////////////////////////////////////////////////
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('admin')
+  getAdminData(@Req() req) {
+    return {
+      message: 'Admin data',
+      user: req.user,
+    };
   }
 }
