@@ -115,6 +115,37 @@ export class WalletService {
   }
 
   /**
+   * Create deposit record
+   *
+   * This is called when user sends crypto to platform address.
+   * Status = PENDING until blockchain confirmations arrive.
+   */
+  async createDeposit(
+    walletId: string,
+    amount: Prisma.Decimal,
+    txHash: string,
+  ) {
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { id: walletId },
+    });
+
+    if (!wallet) {
+      throw new Error('Wallet not found');
+    }
+
+    const deposit = await this.prisma.deposit.create({
+      data: {
+        walletId,
+        amount,
+        txHash,
+        confirmations: 0,
+        status: 'PENDING',
+      },
+    });
+
+    return deposit;
+  }
+  /**
    * Confirm deposit and credit wallet
    */
   async confirmDeposit(depositId: string) {
@@ -265,6 +296,23 @@ export class WalletService {
       if (status === 'WON') {
         await this.createLedgerEntry(tx, bet.walletId, payout, 'WIN', betId);
       }
+    });
+  }
+
+  /**
+   * Get wallet transaction history
+   *
+   * Returns ledger records ordered by newest first.
+   */
+  async getTransactions(walletId: string) {
+    return this.prisma.ledger.findMany({
+      where: {
+        walletId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 50,
     });
   }
 }

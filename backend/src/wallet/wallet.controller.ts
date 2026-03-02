@@ -4,7 +4,8 @@ import {
   Post,
   Body,
   Query,
-  Param
+  Param,
+  Request,
 } from '@nestjs/common';
 
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -13,11 +14,11 @@ import { WalletService } from './wallet.service';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawalDto } from './dto/withdrawal.dto';
 import { BetDto } from './dto/bet.dto';
+import { ConfirmDepositDto } from './dto/confirmdeposit.dto';
 
 @ApiTags('Wallet')
 @Controller('wallet')
 export class WalletController {
-
   constructor(private walletService: WalletService) {}
 
   /**
@@ -37,32 +38,53 @@ export class WalletController {
    */
   @Get(':walletId/balance')
   @ApiOperation({ summary: 'Get wallet balance' })
-  getBalance(
-    @Param('walletId') walletId: string
-  ) {
-    return this.walletService.getBalance(walletId);
+  async getBalance(@Param('walletId') walletId: string) {
+    const balance = await this.walletService.getBalance(walletId);
+
+    return {
+      walletId,
+      balance,
+    };
   }
 
   /**
    * Get available balance
+   * available = balance - locked funds
    */
   @Get(':walletId/available')
   @ApiOperation({ summary: 'Get available balance' })
-  getAvailableBalance(
-    @Param('walletId') walletId: string
-  ) {
-    return this.walletService.getAvailableBalance(walletId);
+  async getAvailableBalance(@Param('walletId') walletId: string) {
+    const available = await this.walletService.getAvailableBalance(walletId);
+
+    return {
+      walletId,
+      available,
+    };
   }
 
   /**
-   * Confirm deposit (normally done by blockchain watcher)
+   * Create deposit
    */
-  @Post('deposit')
-  @ApiOperation({ summary: 'Confirm deposit' })
-  confirmDeposit(
-    @Body() dto: DepositDto
-  ) {
-    return this.walletService.confirmDeposit(dto.walletId);
+  @Post('deposit/create')
+  @ApiOperation({ summary: 'Create deposit record' })
+  createDeposit(@Body() dto: DepositDto) {
+    return this.walletService.createDeposit(
+      dto.walletId,
+      dto.amount as any,
+      dto.txHash,
+    );
+  }
+  /**
+   * Confirm deposit
+   *
+   * Normally executed by:
+   * - blockchain watcher
+   * - admin system
+   */
+  @Post('deposit/confirm')
+  @ApiOperation({ summary: 'Confirm deposit (blockchain confirmation)' })
+  confirmDeposit(@Body() dto: ConfirmDepositDto) {
+    return this.walletService.confirmDeposit(dto.depositId);
   }
 
   /**
@@ -70,13 +92,11 @@ export class WalletController {
    */
   @Post('withdraw')
   @ApiOperation({ summary: 'Create withdrawal request' })
-  withdraw(
-    @Body() dto: WithdrawalDto
-  ) {
+  withdraw(@Body() dto: WithdrawalDto) {
     return this.walletService.requestWithdrawal(
       dto.walletId,
       dto.amount as any,
-      dto.address
+      dto.address,
     );
   }
 
@@ -85,16 +105,22 @@ export class WalletController {
    */
   @Post('bet')
   @ApiOperation({ summary: 'Place bet' })
-  placeBet(
-    @Body() dto: BetDto
-  ) {
+  placeBet(@Body() dto: BetDto) {
     return this.walletService.placeBet(
       dto.userId,
       dto.walletId,
       dto.gameId,
       dto.amount as any,
-      dto.clientSeed
+      dto.clientSeed,
     );
   }
 
+  /**
+   * transaction history for wallet (deposits, withdrawals, bets, wins)
+   */
+  @Get(':walletId/transactions')
+  @ApiOperation({ summary: 'Get wallet transaction history' })
+  getTransactions(@Param('walletId') walletId: string) {
+    return this.walletService.getTransactions(walletId);
+  }
 }

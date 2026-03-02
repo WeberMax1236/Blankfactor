@@ -1,19 +1,25 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { Prisma } from '@prisma/client'
+import { IsUUID, IsString, IsNumber } from 'class-validator'
 
 export class DepositDto {
 
   @ApiProperty({
-    example: 'wallet-uuid-here',
-    description: 'Wallet ID that will receive deposit'
+    example: "wallet-uuid"
   })
   @IsUUID()
-  walletId: string;
+  walletId: string
 
   @ApiProperty({
-    example: '0xabc123txhash',
-    description: 'Blockchain transaction hash'
+    example: "0.5"
+  })
+  @IsNumber()
+  amount: Prisma.Decimal
+
+  @ApiProperty({
+    example: "0xabc123txhash"
   })
   @IsString()
-  txHash: string;
+  txHash: string
+
 }
