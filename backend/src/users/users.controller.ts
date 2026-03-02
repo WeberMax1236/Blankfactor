@@ -1,8 +1,11 @@
 import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles/roles.guard';
 import { Roles } from '../common/decorators/roles/roles.decorator';
 import { Role } from '@prisma/client';
+
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   //////////////////////////////////////////////////////////////////
