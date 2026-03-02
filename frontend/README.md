@@ -2,19 +2,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Run the development server **from the `frontend` directory** (so the correct port and config are used):
 
 ```bash
+cd frontend
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs at **http://localhost:3001** (port 3001 to avoid clashing with the backend on 3000). The dev script uses `--webpack` so the server stays up on browser refresh (Turbopack can exit on refresh in some setups). Keep the terminal open while developing.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
