@@ -14,7 +14,7 @@ export class DepositDto {
     example: "0.5"
   })
   @IsNumber()
-  amount: Prisma.Decimal
+  amount: number
 
   @ApiProperty({
     example: "0xabc123txhash"

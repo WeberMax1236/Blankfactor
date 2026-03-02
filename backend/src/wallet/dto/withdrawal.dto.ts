@@ -16,7 +16,7 @@ export class WithdrawalDto {
     description: "Withdrawal amount"
   })
   @IsNumber()
-  amount: Prisma.Decimal;
+  amount: number;
 
   @ApiProperty({
     example: "0xA123bc456WalletAddress",

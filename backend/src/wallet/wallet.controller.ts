@@ -5,7 +5,6 @@ import {
   Body,
   Query,
   Param,
-  Request,
 } from '@nestjs/common';
 
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -70,7 +69,7 @@ export class WalletController {
   createDeposit(@Body() dto: DepositDto) {
     return this.walletService.createDeposit(
       dto.walletId,
-      dto.amount as any,
+      dto.amount,
       dto.txHash,
     );
   }
@@ -95,7 +94,7 @@ export class WalletController {
   withdraw(@Body() dto: WithdrawalDto) {
     return this.walletService.requestWithdrawal(
       dto.walletId,
-      dto.amount as any,
+      dto.amount,
       dto.address,
     );
   }
@@ -110,11 +109,11 @@ export class WalletController {
       dto.userId,
       dto.walletId,
       dto.gameId,
-      dto.amount as any,
+      dto.amount,
       dto.clientSeed,
     );
   }
-
+Decimal
   /**
    * transaction history for wallet (deposits, withdrawals, bets, wins)
    */

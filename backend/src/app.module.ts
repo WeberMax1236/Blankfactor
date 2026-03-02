@@ -12,6 +12,7 @@ import { BetsModule } from './bets/bets.module';
 import { GamesModule } from './games/games.module';
 import { AuthModule } from './auth/auth.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TransactionsModule } from './transactions/transactions.module';
     GamesModule,
     AuthModule,
     TransactionsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

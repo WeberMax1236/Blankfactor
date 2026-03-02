@@ -122,7 +122,7 @@ export class WalletService {
    */
   async createDeposit(
     walletId: string,
-    amount: Prisma.Decimal,
+    amount: number,
     txHash: string,
   ) {
     const wallet = await this.prisma.wallet.findUnique({
@@ -182,7 +182,7 @@ export class WalletService {
    */
   async requestWithdrawal(
     walletId: string,
-    amount: Prisma.Decimal,
+    amount: number,
     address: string,
   ) {
     const available = await this.getAvailableBalance(walletId);
@@ -222,7 +222,7 @@ export class WalletService {
     userId: string,
     walletId: string,
     gameId: string,
-    amount: Prisma.Decimal,
+    amount: number,
     clientSeed: string,
   ) {
     const available = await this.getAvailableBalance(walletId);
