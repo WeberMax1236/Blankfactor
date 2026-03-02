@@ -5,16 +5,33 @@ import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
+  constructor(private readonly authService: AuthService) {}
 
-  constructor(private authService: AuthService) {}
-
+  // Email register
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.registerEmail(dto);
   }
 
+  // Email login
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(@Body() dto: LoginDto) {
+    return this.authService.loginEmail(dto);
   }
+
+  // Send OTP
+  @Post('send-otp')
+  async sendOtp(@Body('phone') phone: string) {
+    return this.authService.sendOtp(phone);
+  }
+
+  // Verify OTP
+  @Post('verify-otp')
+  async verifyOtp(
+    @Body('phone') phone: string,
+    @Body('currencyId') currencyId: string,
+  ) {
+    return this.authService.verifyOtp(phone, currencyId);
+  }
+
 }

@@ -16,19 +16,50 @@ datasource db {
 //////////////////////////////////////////////////////
 
 model User {
-  id           String @id @default(uuid())
-  email        String @unique
-  username     String @unique
-  passwordHash String
-  role         Role   @default(PLAYER)
+  id String @id @default(uuid())
+
+  // Unique identifiers for user authentication and contact.
+  email String? @unique
+  phone String? @unique
+
+  // user unqiue username
+  username String @unique
+
+  // Password hash(null if using OAuth only)
+  passwordHash String?
+
+  // User experience points for leveling
+  xp Int @default(0)
+
+  // Level reference
+  levelId Int?
+  level   UserLevel? @relation(fields: [levelId], references: [id])
+
+  role Role @default(PLAYER)
 
   // It stores all registered users and their authentication / account status.
   status UserStatus @default(ACTIVE)
 
-  wallets   Wallet[]
-  bets      Bet[]
-  seeds     ProvablyFair[]
-  auditLogs AuditLog[]
+  // Unique referral code for inviting new users. Optional but must be unique if provided.
+  referralCode String? @unique
+
+  // User who invited this user
+  referrerById String?
+  referrerBy   User?   @relation("UserReferrals", fields: [referrerById], references: [id])
+
+  // Users invited by this user
+  referrals User[] @relation("UserReferrals")
+
+  referrerRewards ReferralReward[] @relation("ReferrerRewards")
+  referredRewards ReferralReward[] @relation("ReferredUserRewards")
+
+  // Relations
+  wallets      Wallet[]
+  authMethods  AuthProvider[]
+  bets         Bet[]
+  rewardClaims DailyRewardClaim[]
+  seeds        ProvablyFair[]
+  auditLogs    AuditLog[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -49,6 +80,151 @@ enum UserStatus {
 }
 
 //////////////////////////////////////////////////////
+// Auth PROVIDERS
+// Defines supported authentication providers on the platform.
+// Used to link user accounts to external authentication systems.
+//////////////////////////////////////////////////////
+model AuthProvider {
+  id     String @id @default(uuid())
+  userId String
+
+  // provider name: google, twitter, discord, etc
+  provider String
+
+  // unique ID reutned by the provider to identify the user (e.g. Google sub)
+  providerId String
+
+  user User @relation(fields: [userId], references: [id])
+
+  // prevents same provider account being used twice
+  @@unique([provider, providerId])
+  @@index([userId])
+}
+
+//////////////////////////////////////////////////////
+// OTP CODE
+// Used for phone verification or passwordless login.
+//
+// codeHash -> hashed OTP for security
+//////////////////////////////////////////////////////
+
+model OtpCode {
+  id String @id @default(uuid())
+
+  phone    String
+  codeHash String
+
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+//////////////////////////////////////////////////////
+// USER LEVEL SYSTEM
+// Defines platform level progression based on XP.
+// Users gain XP through betting activity and move up levels.
+// Higher levels can unlock perks like higher withdrawal limits,
+// better rewards, or exclusive bonuses.
+//////////////////////////////////////////////////////
+
+model UserLevel {
+  id Int @id @default(autoincrement())
+
+  // Level number displayed to user
+  level Int @unique
+
+  // XP required to reach this level
+  xpRequired Int
+
+  // Optional benefits for this level
+  rewardMultiplier Float @default(1.0)
+
+  users User[]
+}
+
+//////////////////////////////////////////////////////
+// DAILY REWARDS
+// Defines the reward schedule for daily login bonuses.
+// Example: Day 1 = small bonus, Day 7 = big bonus.
+//////////////////////////////////////////////////////
+
+model DailyReward {
+  id String @id @default(uuid())
+
+  day Int @unique
+
+  amount Decimal
+
+  currencyId String
+  currency   Currency @relation(fields: [currencyId], references: [id])
+
+  claims DailyRewardClaim[]
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// DAILY REWARD CLAIM
+// Stores reward claim history.
+//
+// amount + currencyId are stored to preserve
+// the reward snapshot at claim time.
+//////////////////////////////////////////////////////
+
+model DailyRewardClaim {
+  id String @id @default(uuid())
+
+  userId   String
+  rewardId String
+
+  amount     Decimal
+  currencyId String
+
+  user     User        @relation(fields: [userId], references: [id])
+  reward   DailyReward @relation(fields: [rewardId], references: [id])
+  currency Currency    @relation(fields: [currencyId], references: [id])
+
+  claimedAt DateTime @default(now())
+
+  @@unique([userId, rewardId])
+  @@index([userId])
+}
+
+//////////////////////////////////////////////////////
+// REFERRAL REWARDS
+// Tracks rewards earned by users who invite others.
+//
+// referrerId     -> user who invited
+// referredUserId -> user who joined
+//
+// When referred user bets or deposits,
+// the referrer receives a reward.
+//////////////////////////////////////////////////////
+
+model ReferralReward {
+  id String @id @default(uuid())
+
+  referrerId     String
+  referredUserId String
+
+  amount     Decimal
+  currencyId String
+
+  currency Currency @relation(fields: [currencyId], references: [id])
+
+  referrer     User @relation("ReferrerRewards", fields: [referrerId], references: [id])
+  referredUser User @relation("ReferredUserRewards", fields: [referredUserId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([referrerId])
+  @@index([referredUserId])
+}
+
+//////////////////////////////////////////////////////
 // CRYPTO CURRENCIES
 // Defines supported cryptocurrencies on the platform.
 // Used to create wallets per user per currency.
@@ -64,8 +240,11 @@ model Currency {
   // Each currency can have multiple wallets and multiple bonuses.
   wallets Wallet[]
 
-  createdAt DateTime @default(now())
-  bonuses   Bonus[]
+  createdAt         DateTime           @default(now())
+  bonuses           Bonus[]
+  dailyRewards      DailyReward[]
+  dailyRewardClaims DailyRewardClaim[]
+  referralRewards   ReferralReward[]
 }
 
 //////////////////////////////////////////////////////
@@ -77,7 +256,9 @@ model Currency {
 //////////////////////////////////////////////////////
 
 model Wallet {
-  id         String @id @default(uuid())
+  id String @id @default(uuid())
+
+  // wallet owner
   userId     String
   currencyId String
 
@@ -100,11 +281,11 @@ model Wallet {
 }
 
 //////////////////////////////////////////////////////
-// LEDGER (FINANCIAL TRUTH TABLE)
-// Immutable financial ledger recording all balance changes.
-// This table is the source of truth for wallet balances.
-// Every financial operation (deposit, bet, win, withdrawal, bonus)
-// must create a ledger entry for auditability and reconciliation.
+// LEDGER
+// Immutable financial ledger recording every balance change.
+//
+// amount        -> change in balance
+// balanceAfter  -> wallet balance after transaction
 //////////////////////////////////////////////////////
 
 model Ledger {
@@ -113,8 +294,10 @@ model Ledger {
   walletId String
   wallet   Wallet @relation(fields: [walletId], references: [id])
 
-  amount Decimal
-  type   LedgerType
+  amount       Decimal
+  balanceAfter Decimal
+
+  type LedgerType
 
   betId String?
   bet   Bet?    @relation(fields: [betId], references: [id])
@@ -122,6 +305,10 @@ model Ledger {
   reference String?
 
   createdAt DateTime @default(now())
+
+  @@index([walletId])
+  @@index([betId])
+  @@index([createdAt])
 }
 
 enum LedgerType {
@@ -154,6 +341,7 @@ model Deposit {
   status DepositStatus
 
   createdAt DateTime @default(now())
+  @@index([walletId])
 }
 
 enum DepositStatus {
@@ -191,6 +379,7 @@ model Withdrawal {
   createdAt DateTime @default(now())
 
   withdrawalQueues WithdrawalQueue[]
+  @@index([walletId])
 }
 
 enum WithdrawalStatus {
@@ -203,20 +392,27 @@ enum WithdrawalStatus {
 //////////////////////////////////////////////////////
 // GAMES
 // Defines betting games available on the platform.
-// Examples include dice, crash, roulette, etc.
-// Bets reference this table to indicate which game was played.
 //////////////////////////////////////////////////////
 
 model Game {
-  id       String @id @default(uuid())
+  id String @id @default(uuid())
+
   name     String
-  provider String
+  provider GameProvider
+
+  houseEdge Float?
 
   bets Bet[]
 
   createdAt DateTime @default(now())
 }
 
+enum GameProvider {
+  INTERNAL
+  EVOLUTION
+  PRAGMATIC
+  SPRIBE
+}
 //////////////////////////////////////////////////////
 // BETS
 // Records user betting activity.
@@ -239,7 +435,6 @@ model Bet {
 
   clientSeed String
   nonce      Int
-  result     String
 
   user   User   @relation(fields: [userId], references: [id])
   wallet Wallet @relation(fields: [walletId], references: [id])
@@ -247,9 +442,12 @@ model Bet {
 
   createdAt DateTime @default(now())
 
-  ledgers Ledger[]
-
+  ledgers    Ledger[]
   betResults BetResult[]
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([gameId])
 }
 
 enum BetStatus {
@@ -388,7 +586,7 @@ model Session {
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   ipAddress String
   userAgent String
@@ -397,6 +595,8 @@ model Session {
   expiresAt DateTime
 
   revoked Boolean @default(false)
+
+  @@index([userId])
 }
 
 //////////////////////////////////////////////////////
