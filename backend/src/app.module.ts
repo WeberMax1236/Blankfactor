@@ -1,5 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { LoggerMiddleware } from './common/logger/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,6 +21,15 @@ import { FairnessModule } from './fairness/fairness.module';
 
 @Module({
   imports: [
+
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60,
+          limit: 20,
+        },
+      ],
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -38,4 +49,9 @@ import { FairnessModule } from './fairness/fairness.module';
   controllers: [AppController],
   providers: [AppService, FairnessService],
 })
-export class AppModule {}
+
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
