@@ -14,6 +14,8 @@ import { AuthModule } from './auth/auth.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { AdminModule } from './admin/admin.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { FairnessService } from './fairness/fairness.service';
+import { FairnessModule } from './fairness/fairness.module';
 
 @Module({
   imports: [
@@ -31,8 +33,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
     TransactionsModule,
     AdminModule,
     DashboardModule,
+    FairnessModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, FairnessService],
 })
 export class AppModule {}
