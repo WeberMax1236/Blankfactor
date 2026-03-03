@@ -1,6 +1,18 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 @import "tailwindcss";
 
+/* Intrepid ExtraBold – place IntrepidExtraBold.woff2 (and optional .woff) in public/fonts/ */
+@font-face {
+  font-family: "Intrepid ExtraBold";
+  font-style: normal; 
+  font-weight: 1000;
+  font-display: swap;
+  src:
+    url("/fonts/IntrepidExtraBold.woff2") format("woff2"),
+    url("/fonts/IntrepidExtraBold.woff") format("woff"),
+    url("/fonts/IntrepidExtraBold.ttf") format("truetype");
+}
+
 :root {
   --background: #232626;
   --foreground: #ffffff;
@@ -22,6 +34,23 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-manrope: var(--font-manrope);
+  --font-montserrat: var(--font-montserrat);
+  --font-intrepid: "Intrepid ExtraBold", var(--font-geist-sans), sans-serif;
+}
+
+/* Intrepid ExtraBold + white fill + green outline – hero title and carousel team names */
+.text-intrepid-white-outline {
+  font-family: var(--font-intrepid);
+  color: #ffffff;
+  -webkit-text-stroke: 1.5px #4cc360;
+  paint-order: stroke fill;
+}
+
+.hero-title-win-global {
+  font-family: var(--font-intrepid);
+  color: #ffffff;
+  -webkit-text-stroke: 1.5px #4cc360;
+  paint-order: stroke fill;
 }
 
 * {
@@ -33,6 +62,8 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -117,4 +148,32 @@ button:focus-visible {
 }
 .auth-modal-animate {
   animation: auth-modal-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Live Sports – list and card animation */
+@keyframes live-sports-list-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes live-sports-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-live-sports-list-in {
+  animation: live-sports-list-in 0.35s ease-out;
+}
+.animate-live-sports-card-in {
+  animation: live-sports-card-in 0.4s ease-out both;
 }

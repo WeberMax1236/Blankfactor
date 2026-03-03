@@ -52,9 +52,68 @@ export const auth = {
       body: { phone },
     }),
 
-  verifyOtp: (phone: string, currencyId: string) =>
+  verifyOtp: (phone: string, code: string, currencyId: string) =>
     request<{ access_token: string }>('/auth/verify-otp', {
       method: 'POST',
-      body: { phone, currencyId },
+      body: { phone, code, currencyId },
     }),
+
+  /** Requires backend POST /auth/google with body { googleUser: { id, email }, currencyId } */
+  googleLogin: (googleUser: { id: string; email: string }, currencyId: string) =>
+    request<{ access_token: string }>('/auth/google', {
+      method: 'POST',
+      body: { googleUser, currencyId },
+    }),
+};
+
+/** Default currency for OTP and social sign-up (backend creates wallet with this). */
+export const DEFAULT_CURRENCY_ID = '1';
+
+// --- Dashboard API (GET /api/dashboard/...) ---
+
+export interface DashboardSummary {
+  totalUsers: number;
+  totalBets: number;
+  totalDeposits: number;
+  totalWithdrawals: number;
+  houseProfit: number;
+  rtp: number;
+}
+
+export interface DashboardToday {
+  todayDeposits: number;
+  todayWithdrawals: number;
+  todayBets: number;
+  todayPayouts: number;
+  todayProfit: number;
+  activeUsers: number;
+}
+
+export interface RecentTransaction {
+  id: string;
+  amount: number;
+  balanceAfter: number;
+  type: string;
+  createdAt: string;
+  wallet: {
+    user: { username: string };
+    currency: { symbol: string; name: string };
+  };
+}
+
+export interface RecentBet {
+  id: string;
+  amount: number;
+  payout: number;
+  status: string;
+  createdAt: string;
+  user: { username: string };
+  game: { name: string };
+}
+
+export const dashboard = {
+  getSummary: () => request<DashboardSummary>('/dashboard/summary'),
+  getTodayStats: () => request<DashboardToday>('/dashboard/today'),
+  getRecentTransactions: () => request<RecentTransaction[]>('/dashboard/recent-transactions'),
+  getRecentBets: () => request<RecentBet[]>('/dashboard/recent-bets'),
 };
