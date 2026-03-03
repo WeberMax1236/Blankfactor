@@ -13,6 +13,7 @@ import { GamesModule } from './games/games.module';
 import { AuthModule } from './auth/auth.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { AdminModule } from './admin/admin.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AdminModule } from './admin/admin.module';
     AuthModule,
     TransactionsModule,
     AdminModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
