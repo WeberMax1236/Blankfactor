@@ -1,26 +1,120 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #232626;
+  --foreground: #ffffff;
+  --surface: #292d2e;
+  --surface-hover: #323435;
+  --surface-input: #484a4b;
+  --accent: #4cc360;
+  --accent-dark: #07622b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-input: var(--surface-input);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-manrope: var(--font-manrope);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "Inter", Arial, Helvetica, sans-serif;
+}
+
+button:focus-visible {
+  outline: 2px solid #4a90e2;
+}
+
+/* Auth modals – design reference (docs/design_refer/) */
+.auth-modal-box {
+  font-family: var(--font-manrope), sans-serif;
+  background: #222222;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.auth-modal-input {
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e5e5e5;
+}
+.auth-modal-input::placeholder {
+  color: #5a5a5a;
+}
+.auth-modal-input:focus {
+  outline: none;
+  border-color: rgba(74, 222, 128, 0.5);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.08);
+}
+.auth-modal-btn-primary {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #16a34a 100%);
+  box-shadow: 0 4px 20px rgba(74, 222, 128, 0.3);
+  color: #111;
+}
+.auth-modal-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 30px rgba(74, 222, 128, 0.45);
+  transform: translateY(-1px);
+}
+.auth-modal-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+}
+.auth-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #2a2a2a;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s;
+}
+.auth-checkbox:checked {
+  background: #4ade80;
+  border-color: #4ade80;
+}
+.auth-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 7px;
+  height: 11px;
+  border: 2px solid #111;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+@keyframes auth-modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.auth-modal-animate {
+  animation: auth-modal-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
