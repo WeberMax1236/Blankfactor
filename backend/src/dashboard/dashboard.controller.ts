@@ -8,31 +8,28 @@ export class DashboardController {
 
   constructor(private dashboardService: DashboardService) {}
 
-  /**
-   * Get dashboard summary
-   */
   @Get('summary')
-  @ApiOperation({ summary: 'Get platform summary statistics' })
+  @ApiOperation({ summary: 'Dashboard summary statistics' })
   getSummary() {
     return this.dashboardService.getSummary()
   }
 
-  /**
-   * Get recent ledger transactions
-   */
   @Get('recent-transactions')
-  @ApiOperation({ summary: 'Get recent financial transactions' })
+  @ApiOperation({ summary: 'Recent ledger transactions' })
   getRecentTransactions() {
     return this.dashboardService.getRecentTransactions()
   }
 
-  /**
-   * Get recent bets
-   */
   @Get('recent-bets')
-  @ApiOperation({ summary: 'Get recent bets' })
+  @ApiOperation({ summary: 'Recent bets' })
   getRecentBets() {
     return this.dashboardService.getRecentBets()
+  }
+
+  @Get('today')
+  @ApiOperation({ summary: 'Today financial statistics' })
+  getTodayStats() {
+    return this.dashboardService.getTodayStats()
   }
 
 }
