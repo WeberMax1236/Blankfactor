@@ -11,13 +11,13 @@ import { CommonModule } from './common/common.module';
 import { UsersModule } from './users/users.module';
 import { WalletModule } from './wallet/wallet.module';
 import { BetsModule } from './bets/bets.module';
-import { GamesModule } from './games/games.module';
 import { AuthModule } from './auth/auth.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { AdminModule } from './admin/admin.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { FairnessService } from './fairness/fairness.service';
 import { FairnessModule } from './fairness/fairness.module';
+import { GamesModule } from './games/games.module';
 
 @Module({
   imports: [
