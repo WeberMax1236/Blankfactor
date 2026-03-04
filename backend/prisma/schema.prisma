@@ -44,8 +44,8 @@ model User {
   referralCode String? @unique
 
   // User who invited this user
-  referrerById String?
-  referrerBy   User?   @relation("UserReferrals", fields: [referrerById], references: [id])
+  referrerId String?
+  referrer   User?   @relation("UserReferrals", fields: [referrerId], references: [id])
 
   // Users invited by this user
   referrals User[] @relation("UserReferrals")

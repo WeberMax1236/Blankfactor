@@ -28,4 +28,6 @@ export class RegisterDto {
     message: 'Password must contain letters and numbers',
   })
   password: string;
+
+  referralCode?: string
 }
