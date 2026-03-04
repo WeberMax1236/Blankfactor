@@ -1,23 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type SignInModalProps = {
   onClose: () => void;
   onSwitchToSignUp: () => void;
   onSuccess?: () => void;
+  /** Pre-fill with these after registration so user can sign in with email/phone + password */
+  initialEmail?: string;
+  initialPassword?: string;
 };
 
 export function SignInModal({
   onClose,
   onSwitchToSignUp,
   onSuccess,
+  initialEmail = '',
+  initialPassword = '',
 }: SignInModalProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState(initialPassword);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setEmail(initialEmail);
+    setPassword(initialPassword);
+  }, [initialEmail, initialPassword]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,12 +100,13 @@ export function SignInModal({
           <div>
             <input
               type="text"
+              name="email"
               inputMode="email"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="auth-modal-input w-full rounded-xl px-4 py-3.5 text-[15px] transition-colors"
-              placeholder="Email/Phone Number"
+              placeholder="Email or Phone Number"
             />
           </div>
 

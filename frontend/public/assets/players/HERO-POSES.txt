@@ -1,0 +1,16 @@
+Hero banner – action poses required
+===================================
+
+Replace these files with images that show dynamic, action-oriented poses:
+
+1. gavi.png
+   - Player: Gavi (FC Barcelona)
+   - Use: active football pose (e.g. dribbling or passing)
+   - Do NOT use: static pose, arms crossed
+
+2. Vinicius_Junior.png
+   - Player: Vinícius Júnior (Real Madrid)
+   - Use: running or kicking pose (dynamic movement)
+   - Do NOT use: inactive stance, arms by sides
+
+The hero will look correct when both image files show these action poses.
