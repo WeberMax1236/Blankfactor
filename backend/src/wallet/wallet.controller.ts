@@ -5,6 +5,7 @@ import {
   Body,
   Query,
   Param,
+  UseGuards,
 } from '@nestjs/common';
 
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -14,9 +15,12 @@ import { DepositDto } from './dto/deposit.dto';
 import { WithdrawalDto } from './dto/withdrawal.dto';
 import { BetDto } from './dto/bet.dto';
 import { ConfirmDepositDto } from './dto/confirmdeposit.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @ApiTags('Wallet')
 @Controller('wallet')
+@UseGuards(JwtAuthGuard)
 export class WalletController {
   constructor(private walletService: WalletService) {}
 
@@ -25,11 +29,8 @@ export class WalletController {
    */
   @Get()
   @ApiOperation({ summary: 'Get wallet by user and currency' })
-  getWallet(
-    @Query('userId') userId: string,
-    @Query('currencyId') currencyId: string,
-  ) {
-    return this.walletService.getWallet(userId, currencyId);
+  getWallet(@CurrentUser() user, @Query('currencyId') currencyId: string) {
+    return this.walletService.getWallet(user.id, currencyId);
   }
 
   /**
@@ -37,8 +38,8 @@ export class WalletController {
    */
   @Get(':walletId/balance')
   @ApiOperation({ summary: 'Get wallet balance' })
-  async getBalance(@Param('walletId') walletId: string) {
-    const balance = await this.walletService.getBalance(walletId);
+  async getBalance(@CurrentUser() user, @Param('walletId') walletId: string) {
+    const balance = await this.walletService.getBalance(walletId, user.id);
 
     return {
       walletId,
@@ -52,8 +53,14 @@ export class WalletController {
    */
   @Get(':walletId/available')
   @ApiOperation({ summary: 'Get available balance' })
-  async getAvailableBalance(@Param('walletId') walletId: string) {
-    const available = await this.walletService.getAvailableBalance(walletId);
+  async getAvailableBalance(
+    @CurrentUser() user,
+    @Param('walletId') walletId: string,
+  ) {
+    const available = await this.walletService.getAvailableBalance(
+      walletId,
+      user.id,
+    );
 
     return {
       walletId,
@@ -91,8 +98,9 @@ export class WalletController {
    */
   @Post('withdraw')
   @ApiOperation({ summary: 'Create withdrawal request' })
-  withdraw(@Body() dto: WithdrawalDto) {
+  withdraw(@CurrentUser() user, @Body() dto: WithdrawalDto) {
     return this.walletService.requestWithdrawal(
+      user.id,
       dto.walletId,
       dto.amount,
       dto.address,
@@ -104,16 +112,16 @@ export class WalletController {
    */
   @Post('bet')
   @ApiOperation({ summary: 'Place bet' })
-  placeBet(@Body() dto: BetDto) {
+  placeBet(@CurrentUser() user, @Body() dto: BetDto) {
     return this.walletService.placeBet(
-      dto.userId,
+      user.id,
       dto.walletId,
       dto.gameId,
       dto.amount,
       dto.clientSeed,
     );
   }
-Decimal
+  Decimal;
   /**
    * transaction history for wallet (deposits, withdrawals, bets, wins)
    */

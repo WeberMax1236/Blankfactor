@@ -29,16 +29,18 @@ export class WalletService {
   /**
    * Get wallet balance (cached balance)
    */
-  async getBalance(walletId: string) {
+  async getBalance(walletId: string, userId: string) {
     const wallet = await this.prisma.wallet.findUnique({
       where: { id: walletId },
-      select: { balance: true },
+      select: { balance: true, userId: true },
     });
 
     if (!wallet) {
       throw new NotFoundException('Wallet not found');
     }
-
+    if (wallet.userId !== userId) {
+      throw new NotFoundException('Wallet is not yours');
+    }
     return wallet.balance;
   }
 
@@ -47,14 +49,17 @@ export class WalletService {
    *
    * available = balance - locked funds
    */
-  async getAvailableBalance(walletId: string) {
+  async getAvailableBalance(walletId: string, userId: string) {
     const wallet = await this.prisma.wallet.findUnique({
       where: { id: walletId },
-      select: { balance: true },
+      select: { balance: true, userId: true },
     });
 
     if (!wallet) {
       throw new NotFoundException('Wallet not found');
+    }
+    if (wallet.userId !== userId) {
+      throw new NotFoundException('Wallet is not yours');
     }
 
     const locked = await this.prisma.balanceLock.aggregate({
@@ -181,11 +186,12 @@ export class WalletService {
    * Create withdrawal request
    */
   async requestWithdrawal(
+    userId: string,
     walletId: string,
     amount: number,
     address: string,
   ) {
-    const available = await this.getAvailableBalance(walletId);
+    const available = await this.getAvailableBalance(walletId, userId);
 
     if (available.lessThan(amount)) {
       throw new Error('Insufficient balance');
@@ -225,7 +231,7 @@ export class WalletService {
     amount: number,
     clientSeed: string,
   ) {
-    const available = await this.getAvailableBalance(walletId);
+    const available = await this.getAvailableBalance(walletId, userId);
 
     if (available.lessThan(amount)) {
       throw new Error('Insufficient balance');
