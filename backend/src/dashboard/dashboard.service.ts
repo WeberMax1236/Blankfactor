@@ -1,9 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
+/** Safely convert Prisma Decimal or number to number for JSON. */
+function toNumber(value: unknown): number {
+  if (typeof value === 'number' && !Number.isNaN(value)) return value;
+  const d = value as { toNumber?: () => number } | null | undefined;
+  if (d != null && typeof d.toNumber === 'function') return d.toNumber();
+  return 0;
+}
+
 @Injectable()
 export class DashboardService {
+  private readonly logger = new Logger(DashboardService.name);
+
   constructor(private prisma: PrismaService) {}
 
   /**
@@ -67,46 +77,76 @@ export class DashboardService {
   }
 
   /**
-   * Recent transactions (ledger history)
+   * Recent transactions (ledger history).
+   * Returns plain JSON-serializable objects (no Prisma Decimal/Date).
    */
   async getRecentTransactions() {
-    return this.prisma.ledger.findMany({
-      take: 10,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        id: true,
-        amount: true,
-        balanceAfter: true,
-        type: true,
-        createdAt: true,
+    try {
+      const rows = await this.prisma.ledger.findMany({
+        take: 10,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: {
+          id: true,
+          amount: true,
+          balanceAfter: true,
+          type: true,
+          createdAt: true,
 
-        wallet: {
-          select: {
-            user: {
-              select: {
-                username: true,
+          wallet: {
+            select: {
+              user: {
+                select: {
+                  username: true,
+                },
               },
-            },
 
-            currency: {
-              select: {
-                symbol: true,
-                name: true,
+              currency: {
+                select: {
+                  symbol: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
+      return rows.map((row) => {
+        const wallet = row.wallet;
+        return {
+          id: String(row.id),
+          amount: toNumber(row.amount),
+          balanceAfter: toNumber(row.balanceAfter),
+          type: String(row.type),
+          createdAt: row.createdAt.toISOString(),
+          wallet: wallet
+            ? {
+                user: wallet.user
+                  ? { username: String(wallet.user.username) }
+                  : null,
+                currency: wallet.currency
+                  ? {
+                      symbol: String(wallet.currency.symbol),
+                      name: String(wallet.currency.name),
+                    }
+                  : null,
+              }
+            : null,
+        };
+      });
+    } catch (err) {
+      this.logger.error('getRecentTransactions failed', err);
+      throw err;
+    }
   }
 
   /**
-   * Recent bets
+   * Recent bets.
+   * Converts Prisma Decimal fields to numbers for JSON serialization.
    */
   async getRecentBets() {
-    return this.prisma.bet.findMany({
+    const rows = await this.prisma.bet.findMany({
       take: 10,
       orderBy: {
         createdAt: 'desc',
@@ -131,6 +171,15 @@ export class DashboardService {
         },
       },
     });
+    return rows.map((row) => ({
+      id: row.id,
+      amount: toNumber(row.amount),
+      payout: toNumber(row.payout),
+      status: row.status,
+      createdAt: row.createdAt.toISOString(),
+      user: row.user ? { username: row.user.username } : null,
+      game: row.game ? { name: row.game.name } : null,
+    }));
   }
 
   /**

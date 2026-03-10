@@ -62,7 +62,7 @@ export class AuthService {
           username: dto.username,
           passwordHash: hashedPassword,
           referralCode: await this.generateReferralCode(),
-          referrerById: referrerId,
+          referrerId,
         },
       });
 
@@ -83,12 +83,18 @@ export class AuthService {
         userId: user.id,
         referralCode: user.referralCode,
       };
-    } catch (error) {
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      if (err?.code === 'P2002') {
         throw new ConflictException('Email or Username already exists');
       }
-
-      throw new InternalServerErrorException();
+      const message = err?.message ?? String(error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[AuthService] register error:', message, error);
+      }
+      throw new InternalServerErrorException(
+        process.env.NODE_ENV === 'production' ? undefined : message,
+      );
     }
   }
   async loginEmail(dto: LoginDto) {

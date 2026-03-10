@@ -9,7 +9,8 @@ const PASSWORD_MIN = 8;
 const PASSWORD_MAX = 32;
 const HAS_LETTER = /[A-Za-z]/;
 const HAS_NUMBER = /\d/;
-const HAS_SPECIAL = /[!#$%&'()*+,\-./:;<=>?@[\]^_`{|}~]/;
+// Backend only allows: letters, digits, and @$!%*?& (see RegisterDto)
+const PASSWORD_ALLOWED = /^[A-Za-z\d@$!%*?&]+$/;
 
 function validateUsername(value: string): string | null {
   if (value.length < 3 || value.length > 20) return 'Username must be 3–20 characters';
@@ -25,15 +26,15 @@ function getPasswordSuggestions(value: string): string[] {
   if (value.length > PASSWORD_MAX) suggestions.push(`No more than ${PASSWORD_MAX} characters`);
   if (!HAS_LETTER.test(value)) suggestions.push('Add letters (a–z, A–Z)');
   if (!HAS_NUMBER.test(value)) suggestions.push('Add a number');
-  if (!HAS_SPECIAL.test(value)) suggestions.push('Add a special character (!@#$%^&* etc.)');
+  if (!PASSWORD_ALLOWED.test(value)) suggestions.push('Only letters, numbers, and @$!%*?& allowed');
   return suggestions;
 }
 
 function validatePassword(value: string): string | null {
   if (value.length < PASSWORD_MIN || value.length > PASSWORD_MAX) return 'Password must be 8–32 characters';
-  if (!HAS_LETTER.test(value)) return 'Password must include letters, numbers, and special characters';
-  if (!HAS_NUMBER.test(value)) return 'Password must include letters, numbers, and special characters';
-  if (!HAS_SPECIAL.test(value)) return 'Password must include letters, numbers, and special characters';
+  if (!HAS_LETTER.test(value)) return 'Password must contain letters and numbers';
+  if (!HAS_NUMBER.test(value)) return 'Password must contain letters and numbers';
+  if (!PASSWORD_ALLOWED.test(value)) return 'Password may only contain letters, numbers, and @$!%*?&';
   return null;
 }
 
@@ -148,6 +149,9 @@ export function SignUpModal({
     }
 
     setLoading(true);
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('[SignUp] Sending register request:', { email, username, passwordLength: password.length });
+    }
     try {
       await auth.register({ email, username, password });
       onSuccess?.({ email, password });
@@ -155,9 +159,14 @@ export function SignUpModal({
       onSwitchToSignIn();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sign up failed';
-      // Backend 500: show a user-friendly message (actual fix is on the backend)
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+        console.error('[SignUp] Register error:', message, err instanceof Error ? err.message : err);
+      }
+      // In development, show the real error (e.g. "Backend unreachable..." or "Internal Server Error (HTTP 500)")
+      const isDev = typeof window !== 'undefined' && process.env.NODE_ENV === 'development';
+      const is500 = message.includes('500') || message === 'Internal Server Error';
       setError(
-        message === 'Internal Server Error' || message.includes('500')
+        !isDev && is500
           ? 'Something went wrong on our side. Please try again in a moment or contact support.'
           : message
       );

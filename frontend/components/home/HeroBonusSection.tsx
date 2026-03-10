@@ -99,10 +99,10 @@ function PromoAndReferralSection({
   const inputClass =
     'flex-1 min-w-0 h-10 px-3 rounded-[10px] bg-[#252829] border border-white/10 text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-[#4cc360]/50 focus:ring-1 focus:ring-[#4cc360]/30';
   const buttonClass =
-    'shrink-0 px-4 py-2.5 h-10 rounded-[10px] bg-[#4cc360] text-white text-sm font-semibold hover:bg-[#5dd471] active:scale-[0.98] transition-all cursor-pointer';
+    'shrink-0 px-4 py-2.5 h-10 rounded-[10px] bg-[#149145] text-white text-sm font-semibold hover:bg-[#5dd471] active:scale-[0.98] transition-all cursor-pointer';
 
   return (
-    <div className="mt-4 lg:mt-6 p-4 sm:p-5 rounded-[10px] bg-[#2d3134] flex flex-col sm:flex-row gap-6 sm:gap-8 lg:gap-10">
+    <div className="mt-6 lg:mt-8 p-4 sm:p-5 rounded-xl bg-[#2d3134] border border-white/10 shadow-lg flex flex-col sm:flex-row gap-6 sm:gap-10 lg:gap-16">
       {/* Promo code */}
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         <p className="text-sm text-white/60">Already have a promo code?</p>

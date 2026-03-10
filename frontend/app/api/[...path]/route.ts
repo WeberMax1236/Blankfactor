@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Proxy API requests to the backend so the browser only talks to the same origin.
- * Browser calls: http://localhost:3001/api/... → this route forwards to the backend.
- * Backend must run on port 3000 (or set API_BACKEND_URL in .env.local).
+ * Proxy: browser (3001) /api/* → backend http://127.0.0.1:3000/api/*
+ * The browser only sees localhost:3001; this route forwards to port 3000.
+ * Use 127.0.0.1 so the server always reaches the backend on the same machine.
+ * Override with API_BACKEND_URL in .env.local if needed.
  */
-const DEFAULT_BACKEND = 'http://localhost:3000';
+const DEFAULT_BACKEND = 'http://127.0.0.1:3000';
 const BACKEND_URL = (process.env.API_BACKEND_URL?.trim() || DEFAULT_BACKEND).replace(/\/$/, '');
 
 export async function GET(
@@ -83,25 +84,38 @@ async function proxy(
 
   let res: Response;
   try {
+    const fetchHeaders: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      fetchHeaders[key] = value;
+    });
+    if (method !== 'GET' && body && !fetchHeaders['content-type']) {
+      fetchHeaders['content-type'] = 'application/json';
+    }
     res = await fetch(fullUrl, {
       method,
-      headers: headers.toString() ? headers : undefined,
-      body,
+      headers: Object.keys(fetchHeaders).length ? fetchHeaders : undefined,
+      body: body ?? undefined,
     });
   } catch (err) {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.error('[API proxy] Backend fetch failed. Is it running on', baseUrl, err);
+      console.error('[API proxy] Backend fetch failed. Is it running on', fullUrl, err);
     }
     return new NextResponse(
       JSON.stringify({
         message:
           'Backend unreachable. Ensure the backend is running on ' +
-          baseUrl +
+          DEFAULT_BACKEND +
           ' and restart the frontend.',
       }),
       { status: 502, headers: { 'Content-Type': 'application/json' } }
     );
+  }
+
+  const data = await res.text();
+  if (process.env.NODE_ENV === 'development' && !res.ok) {
+    // eslint-disable-next-line no-console
+    console.error('[API proxy] Backend returned error:', res.status, res.statusText, data.slice(0, 500));
   }
 
   const resHeaders = new Headers();
@@ -109,9 +123,9 @@ async function proxy(
   if (contentType) resHeaders.set('content-type', contentType);
   if (process.env.NODE_ENV === 'development') {
     resHeaders.set('X-Backend-URL', fullUrl);
+    resHeaders.set('X-Backend-Status', String(res.status));
   }
 
-  const data = await res.text();
   return new NextResponse(data, {
     status: res.status,
     statusText: res.statusText,

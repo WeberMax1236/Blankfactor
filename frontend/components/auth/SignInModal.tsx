@@ -44,7 +44,7 @@ export function SignInModal({
       const message = err instanceof Error ? err.message : 'Sign in failed';
       setError(
         message === 'Internal Server Error' || message.includes('500')
-          ? 'Something went wrong on our side. Please try again in a moment or contact support.'
+          ? (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' ? message : 'Something went wrong on our side. Please try again in a moment or contact support.')
           : message
       );
     } finally {

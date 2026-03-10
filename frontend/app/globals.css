@@ -177,3 +177,57 @@ button:focus-visible {
 .animate-live-sports-card-in {
   animation: live-sports-card-in 0.4s ease-out both;
 }
+
+/* Dropdown panels (header + sidebar subcategories) */
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes dropdown-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(-6px);
+  }
+}
+@keyframes dropdown-sub-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes dropdown-sub-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+.animate-dropdown-in {
+  animation: dropdown-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-dropdown-out {
+  animation: dropdown-out 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+.animate-dropdown-sub-in {
+  animation: dropdown-sub-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-dropdown-sub-out {
+  animation: dropdown-sub-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}

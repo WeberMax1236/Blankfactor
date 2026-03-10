@@ -12,7 +12,8 @@ type RequestOptions = Omit<RequestInit, 'body'> & { body?: object };
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, ...rest } = options;
-  const res = await fetch(`${API_BASE}${path}`, {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, {
     ...rest,
     headers: {
       'Content-Type': 'application/json',
@@ -27,7 +28,22 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     const raw = (data as { message?: string | string[] }).message;
     const message =
       Array.isArray(raw) ? raw.join(', ') : typeof raw === 'string' ? raw : null;
-    throw new Error(message || res.statusText || 'Request failed');
+    const statusText = res.statusText || 'Request failed';
+    const finalMessage = message || statusText;
+    const devMessage =
+      typeof window !== 'undefined' && process.env.NODE_ENV === 'development'
+        ? `${finalMessage} (HTTP ${res.status})`
+        : finalMessage;
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      // Use console.warn so Next.js dev overlay doesn't show a red "Console Error" for expected API failures
+      console.warn(
+        `[API] Request failed: ${devMessage}`,
+        `\n  ${rest.method ?? 'GET'} ${url}`,
+        `\n  Status: ${res.status} ${res.statusText}`,
+        data && Object.keys(data).length > 0 ? data : undefined,
+      );
+    }
+    throw new Error(devMessage);
   }
 
   return data as T;

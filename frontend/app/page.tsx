@@ -16,10 +16,50 @@ import {
 import { clearToken, isAuthenticated } from '@/lib/auth';
 
 const SIDEBAR_NAV = [
-  { label: 'Sports', icon: '/assets/sidebar_images/sports.png' },
-  { label: 'Lottery', icon: '/assets/sidebar_images/lottery.png' },
-  { label: 'Games', icon: '/assets/sidebar_images/games.png' },
-  { label: 'Casino', icon: '/assets/sidebar_images/casino.png' },
+  {
+    label: 'Sports',
+    icon: '/assets/sidebar_images/sports.png',
+    children: [
+      { label: 'Soccer', icon: '/assets/sidebar_subcategories/sports/Soccer.svg' },
+      { label: 'Basketball', icon: '/assets/sidebar_subcategories/sports/Basketball.svg' },
+      { label: 'eSoccer', icon: '/assets/sidebar_subcategories/sports/eSoccer.svg' },
+      { label: 'Tennis', icon: '/assets/sidebar_subcategories/sports/Tennis.svg' },
+      { label: 'Ice Hokey', icon: '/assets/sidebar_subcategories/sports/Ice Hokey.svg' },
+      { label: 'Handball', icon: '/assets/sidebar_subcategories/sports/Handball.svg' },
+      { label: 'American Football', icon: '/assets/sidebar_subcategories/sports/American Football.svg' },
+      { label: 'MMA', icon: '/assets/sidebar_subcategories/sports/MMA.svg' },
+    ],
+  },
+  {
+    label: 'Lottery',
+    icon: '/assets/sidebar_images/lottery.png',
+    children: [
+      { label: 'My Bets', icon: '/assets/sidebar_subcategories/Lottery/My Bets.svg' },
+    ],
+  },
+  {
+    label: 'Games',
+    icon: '/assets/sidebar_images/games.png',
+    children: [
+      { label: 'Plinko', icon: '/assets/sidebar_subcategories/Games/Plinko.svg' },
+      { label: 'Dice Game', icon: '/assets/sidebar_subcategories/Games/Dice Game.svg' },
+      { label: 'Poker', icon: '/assets/sidebar_subcategories/Games/Poker.svg' },
+      { label: 'Limbo', icon: '/assets/sidebar_subcategories/Games/Limbo.svg' },
+      { label: 'Keno', icon: '/assets/sidebar_subcategories/Games/Keno.svg' },
+    ],
+  },
+  {
+    label: 'Casino',
+    icon: '/assets/sidebar_images/casino.png',
+    children: [
+      { label: 'Favorites', icon: '/assets/sidebar_subcategories/Casino/Favorites.svg' },
+      { label: 'Recent', icon: '/assets/sidebar_subcategories/Casino/Recent.svg' },
+      { label: 'Hot Games', icon: '/assets/sidebar_subcategories/Casino/Hot Games.svg' },
+      { label: 'Slots', icon: '/assets/sidebar_subcategories/Casino/Slots.svg' },
+      { label: 'Live Casino', icon: '/assets/sidebar_subcategories/Casino/Live Casino.svg' },
+      { label: 'New Releases', icon: '/assets/sidebar_subcategories/Casino/New Releases.svg' },
+    ],
+  },
   { label: 'Live Support', icon: '/assets/sidebar_images/live_support.png', hideArrow: true },
 ];
 
@@ -78,6 +118,8 @@ export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [liveSportsShowAll, setLiveSportsShowAll] = useState(true);
   const [liveSportsPage, setLiveSportsPage] = useState(0);
+  const [trendingShowAll, setTrendingShowAll] = useState(true);
+  const [trendingPage, setTrendingPage] = useState(0);
   const [heroSlide, setHeroSlide] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -88,6 +130,15 @@ export default function Home() {
     : LIVE_MATCHES.slice(
         liveSportsPage * LIVE_SPORTS_PER_PAGE,
         (liveSportsPage + 1) * LIVE_SPORTS_PER_PAGE
+      );
+
+  const TRENDING_GAMES_PER_PAGE = 3;
+  const trendingTotalPages = Math.max(1, Math.ceil(TRENDING_GAMES.length / TRENDING_GAMES_PER_PAGE));
+  const trendingGames = trendingShowAll
+    ? TRENDING_GAMES
+    : TRENDING_GAMES.slice(
+        trendingPage * TRENDING_GAMES_PER_PAGE,
+        (trendingPage + 1) * TRENDING_GAMES_PER_PAGE
       );
 
   useEffect(() => {
@@ -146,8 +197,8 @@ export default function Home() {
       />
 
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 mx-2 sm:mx-3 md:mx-4 lg:mx-5 mt-4 lg:mt-5 pb-6 lg:pb-8 min-w-0">
-        {/* Sidebar – drawer on mobile (no layout space when closed), inline on lg+ */}
-        <div className={`order-2 lg:order-1 ${!sidebarOpen ? 'w-0 overflow-hidden lg:w-auto lg:overflow-visible' : ''}`}>
+        {/* Sidebar – collapsed = icons only (72px); expanded = full (311px, drawer on mobile) */}
+        <div className={`order-2 lg:order-1 shrink-0 ${sidebarOpen ? 'w-0 lg:w-[311px]' : 'w-[72px] lg:w-[72px]'}`}>
           <Sidebar
             items={SIDEBAR_NAV}
             open={sidebarOpen}
@@ -177,7 +228,17 @@ export default function Home() {
             )}
           </div>
 
-          <TrendingGamesSection games={TRENDING_GAMES} />
+          <TrendingGamesSection
+            games={trendingGames}
+            showAll={trendingShowAll}
+            onShowAllChange={setTrendingShowAll}
+            currentPage={trendingPage}
+            totalPages={trendingTotalPages}
+            onPrevPage={() => setTrendingPage((p) => Math.max(0, p - 1))}
+            onNextPage={() =>
+              setTrendingPage((p) => Math.min(trendingTotalPages - 1, p + 1))
+            }
+          />
 
           <LiveSportsSection
             matches={liveSportsMatches}
